@@ -1141,7 +1141,14 @@ static void send_packet_to_server (packet_t pp, int chan)
 	  strlcat (msg, ",qAO,", sizeof(msg));		// new for version 1.4.
 	}
 
-	strlcat (msg, save_audio_config_p->achan[chan].mycall, sizeof(msg));
+	// 'chan' is for sending packets from IS to RF, yet this routine
+	// is for just the opposite. But we need 'mycall' to complete the packet
+	// and 'chan' may be set to -1 if beconing (and 'save_igate_config_p->tx_chan' might be too if we're an
+	// RX only IGATE). Until resolved, setting this to channel 0.
+	// I'm assuming channel zero is setup - it must be, otherwise why are you using dw?
+	// The fix is probably to include a 'mycall' field in the IGATE config - while a station
+	// may have multiple audio interfaces, it will probably only need one interface to IS...
+	strlcat (msg, save_audio_config_p->achan[0].mycall, sizeof(msg));
 	strlcat (msg, ":", sizeof(msg));
 
 
