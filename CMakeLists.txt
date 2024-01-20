@@ -8,6 +8,9 @@ set(direwolf_VERSION_MINOR "7")
 set(direwolf_VERSION_PATCH "0")
 set(direwolf_VERSION_SUFFIX "Development")
 
+############ w4kus ################
+include(w4kus.cmake)
+
 # options
 # See Issue 297.
 option(FORCE_SSE "Compile with SSE instruction only" ON)
