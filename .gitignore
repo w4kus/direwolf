@@ -111,3 +111,6 @@ $RECYCLE.BIN/
 # cmake
 build/
 tmp/
+
+# VSCode
+.vscode/
