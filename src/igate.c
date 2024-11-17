@@ -1148,6 +1148,8 @@ static void send_packet_to_server (packet_t pp, int chan)
 	// I'm assuming channel zero is setup - it must be, otherwise why are you using dw?
 	// The fix is probably to include a 'mycall' field in the IGATE config - while a station
 	// may have multiple audio interfaces, it will probably only need one interface to IS...
+	// Original code:
+	// strlcat (msg, save_audio_config_p->achan[chan].mycall, sizeof(msg));
 	strlcat (msg, save_audio_config_p->achan[0].mycall, sizeof(msg));
 	strlcat (msg, ":", sizeof(msg));
 
@@ -2361,7 +2363,8 @@ Send it now and remember that fact.
 Digipeat it.  Notice how it has a trailing CR.
 TODO:  Why is the CRC different?  Content looks the same.
 
-	ig_to_tx_remember [38] = ch0 d1 1447683040 27598 "N1ZKO-7>T2TS7X:`c6wl!i[/>"4]}[scanning]="
+	ig_to_tx_remember [38] = ch0 d1 1447683040 27598 "N1ZKO-7>T2TS7X:`c6wl!i[/>"4]}[scanning]=
+"
 	[0H] N1ZKO-7>T2TS7X,WB2OSZ-14*,WIDE2-1:`c6wl!i[/>"4]}[scanning]=<0x0d>
 
 Now we hear it again, thru a digipeater.
