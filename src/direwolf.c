@@ -602,7 +602,7 @@ int main (int argc, char *argv[])
           case '?':
 
             /* For '?' unknown option message was already printed. */
-            usage ();
+            usage (NULL);
             break;
 
 	  case 'd':				/* Set debug option. */
@@ -746,7 +746,7 @@ int main (int argc, char *argv[])
             /* Should not be here. */
 	    text_color_set(DW_COLOR_DEBUG);
             dw_printf("?? getopt returned character code 0%o ??\n", c);
-            usage ();
+            usage (NULL);
           }
 	}  /* end while(1) for options */
 
@@ -991,7 +991,7 @@ int main (int argc, char *argv[])
 	  text_color_set(DW_COLOR_ERROR);
 	  dw_printf ("Pointless to continue without audio device.\n");
 	  SLEEP_SEC(5);
-	  usage ();
+	  usage (NULL);
 	  exit (1);
 	}
 
