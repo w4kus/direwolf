@@ -8,7 +8,9 @@ set(direwolf_VERSION_MINOR "7")
 set(direwolf_VERSION_PATCH "0")
 set(direwolf_VERSION_SUFFIX "Development")
 
-############ w4kus ################
+############ __w4kus ################
+# comment the following line out to build the stock
+# direwolf
 include(w4kus.cmake)
 
 # options
