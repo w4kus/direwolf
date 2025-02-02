@@ -43,6 +43,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <math.h>
+#include <sys/stat.h>
 
 #if ENABLE_GPSD
 #include <gps.h>		/* for DEFAULT_GPSD_PORT  (2947) */
@@ -5806,6 +5807,15 @@ static int beacon_options(char *cmd, struct beacon_s *b, int line, struct audio_
 	  else if (strcasecmp(keyword, "MESSAGING") == 0) {
 	    b->messaging = atoi(value);
 	  }
+	  else if (strcasecmp(keyword, "SYNC") == 0) {
+		// FIXME - this will probably need tweaking on Windows but I can't test it
+		// right now (no Windows installation)
+		b->sync_path = strdup(value);
+
+		// We can't check for read permissions here since the file may not
+		// exist yet. We'll throw an error during beacon runtime if necessary.
+	  }
+
 	  else {
 	    text_color_set(DW_COLOR_ERROR);
 	    dw_printf ("Config file, line %d: Invalid option keyword, %s.\n", line, keyword);

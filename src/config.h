@@ -196,6 +196,25 @@ struct misc_config_s {
 
 	  char *via;		/* Path, e.g. "WIDE1-1,WIDE2-1" or NULL. */
 
+	  char *sync_path;	/* Absolute path to a syncronization file */
+				/* This is to facilitate synchronizing beacons to an external event. */
+				/* Originally added to synchronize beaconing with a weather station, this */
+				/* could also be used for other things. The idea is to set the beaconing time */
+				/* to a "polling" value suitable for the timing of the external event. when */
+				/* the time expires, the code will check for the existance of the specified */
+				/* file and, if it exists and the modfication time has changed, a beacon will be generated. */
+				/* Otherwise, no beacon will be generated. The time will be reset */
+				/* in either case. The path must be readable to dw. */
+
+	  time_t last_sync_mod_time; /* The last time the sync file was modified */
+
+	  char *sync_info;	/* Info part provided by the sync file */
+				/* For general synchronization, an empty sync file will do. */
+				/* Optionally, you can include the info text in the file and */
+				/* dw will read and use that, but only when the beacon type is */
+				/* BEACON_CUSTOM and both 'custom_info' and 'custom_infocmd' */
+				/* are NULL. */
+
 	  char *custom_info;	/* Info part for handcrafted custom beacon. */
 				/* Ignore the rest below if this is set. */
 

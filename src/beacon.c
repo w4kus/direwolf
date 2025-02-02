@@ -40,6 +40,9 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
+#include <stdbool.h>
+#include <errno.h>
+#include <sys/stat.h>
 
 
 #include "ax25_pad.h"
@@ -89,6 +92,8 @@ static time_t sb_calculate_next_time (time_t now,
 			time_t last_xmit_time, float last_xmit_course);
 
 static void beacon_send (int j, dwgps_info_t *gpsinfo);
+
+static bool check_sync(struct beacon_s *bp);
 
 
 /*-------------------------------------------------------------------
@@ -250,7 +255,9 @@ void beacon_init (struct audio_s *pmodem, struct misc_config_s *pconfig, struct 
 
 		  /* INFO or INFOCMD is required. */
 
-		  if (g_misc_config_p->beacon[j].custom_info == NULL && g_misc_config_p->beacon[j].custom_infocmd == NULL) {
+		  if (g_misc_config_p->beacon[j].custom_info == NULL &&
+				g_misc_config_p->beacon[j].custom_infocmd == NULL &&
+				g_misc_config_p->beacon[j].sync_path == NULL) {
 	            text_color_set(DW_COLOR_ERROR);
 	            dw_printf ("Config file, line %d: INFO or INFOCMD is required for custom beacon.\n", g_misc_config_p->beacon[j].lineno);
 		    g_misc_config_p->beacon[j].btype = BEACON_IGNORE;
@@ -570,9 +577,9 @@ static void * beacon_thread (void *arg)
 
 	    if (bp->next <= now) {
 
-	      /* Send the beacon. */
-
-	      beacon_send (j, &gpsinfo);
+	      /* Send the beacon but check if syncing is to be used */
+		  if (check_sync(bp))
+			beacon_send (j, &gpsinfo);
 
 	      /* Calculate when the next one should be sent. */
 	      /* Easy for fixed interval.  SmartBeaconing takes more effort. */
@@ -999,6 +1006,9 @@ static void beacon_send (int j, dwgps_info_t *gpsinfo)
 		      strlcpy (beacon_text, "", sizeof(beacon_text));  // abort!
 	            }
 		  }
+		  else if (bp->sync_info) {
+			strlcat(beacon_text, bp->sync_info, sizeof(beacon_text));
+		  }
 		  else {
 		    text_color_set(DW_COLOR_ERROR);
 	    	    dw_printf ("Internal error. custom_info is null. %s %d\n", __FILE__, __LINE__);
@@ -1080,6 +1090,92 @@ static void beacon_send (int j, dwgps_info_t *gpsinfo)
 	      }
 
 } /* end beacon_send */
+
+/*-------------------------------------------------------------------
+ *
+ * Name:        check_sync
+ *
+ * Purpose:     Check for synchronization
+ *
+ * Inputs:		beacon object
+ *
+ * Outputs:		true to allow the beacon, false if it's not synced yet
+ *
+ * Description:	Check if synchronization is enabled and, if so, if the sync file exists
+ *
+ *--------------------------------------------------------------------*/
+static bool check_sync(struct beacon_s *bp)
+{
+	bool ret = true;
+
+	if (bp->sync_path)
+	{
+		FILE *f = fopen(bp->sync_path, "r");
+		ret = (f) ? true : false;
+
+		if (ret)
+		{
+			struct stat st;
+
+			stat(bp->sync_path, &st);
+			time_t modTime = st.st_mtim.tv_sec;
+
+			// Checking for equality here to cover the case of the system clock
+			// being mucked with.
+			if (!bp->last_sync_mod_time || (modTime != bp->last_sync_mod_time))
+			{
+				bp->last_sync_mod_time = modTime;
+
+				// check if the file is not empty; if not we assume that it
+				// contains the info part of the packet but only if the
+				// type is BEACON_CUSTOM
+				if (st.st_size && bp->btype == BEACON_CUSTOM)
+				{
+					if (bp->sync_info)
+						free(bp->sync_info);
+
+					size_t sz = st.st_size + 1;
+					bp->sync_info = (char *)calloc(1, sz);
+
+					FILE *f = fopen(bp->sync_path, "r");
+
+					if (f)
+					{
+						fgets(bp->sync_info, sz, f);
+						fclose(f);
+					}
+					else
+					{
+						text_color_set(DW_COLOR_ERROR);
+						dw_printf("Error reading info text from the sync file\n");
+						free(bp->sync_info);
+						bp->sync_info = NULL;
+					}
+				}
+			}
+			else
+				ret = false;
+		}
+		else
+		{
+			ret = false;
+
+			// Check the error - if it's not ENOENT (No such file or directory) then
+			// we have some other problem that will cause this to not work, so disable
+			// syncing
+			if (errno != ENOENT)
+			{
+				text_color_set(DW_COLOR_ERROR);
+				dw_printf("Fatal error checking for the sync file: %s. Disabling sync.\n", strerror(errno));
+
+				free(bp->sync_path);
+				bp->sync_path = NULL;
+			}
+		}
+	}
+
+	return ret;
+}
 
 
 /* end beacon.c */
