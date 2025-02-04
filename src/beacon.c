@@ -1127,28 +1127,21 @@ static bool check_sync(struct beacon_s *bp)
 			{
 				bp->last_sync_mod_time = modTime;
 
+				if (bp->sync_info)
+				{
+					free(bp->sync_info);
+					bp->sync_info = NULL;
+				}
+
 				// check if the file is not empty; if not we assume that it
 				// contains the info part of the packet but only if the
 				// type is BEACON_CUSTOM
 				if (st.st_size && bp->btype == BEACON_CUSTOM)
 				{
-					if (bp->sync_info)
-						free(bp->sync_info);
-
 					size_t sz = st.st_size + 1;
 					bp->sync_info = (char *)calloc(1, sz);
 
 					fgets(bp->sync_info, sz, f);
-
-					if (f)
-						fgets(bp->sync_info, sz, f);
-					else
-					{
-						text_color_set(DW_COLOR_ERROR);
-						dw_printf("Error reading info text from the sync file\n");
-						free(bp->sync_info);
-						bp->sync_info = NULL;
-					}
 				}
 			}
 			else
@@ -1170,6 +1163,12 @@ static bool check_sync(struct beacon_s *bp)
 
 				free(bp->sync_path);
 				bp->sync_path = NULL;
+
+				if (bp->sync_info)
+				{
+					free(bp->sync_info);
+					bp->sync_info = NULL;
+				}
 			}
 		}
 	}
