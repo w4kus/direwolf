@@ -1139,12 +1139,9 @@ static bool check_sync(struct beacon_s *bp)
 					bp->sync_info = (char *)calloc(1, sz);
 
 					fgets(bp->sync_info, sz, f);
-					
+
 					if (f)
-					{
 						fgets(bp->sync_info, sz, f);
-						fclose(f);
-					}
 					else
 					{
 						text_color_set(DW_COLOR_ERROR);
