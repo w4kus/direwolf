@@ -43,6 +43,7 @@
 #include <stdbool.h>
 #include <errno.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 
 
 #include "ax25_pad.h"
@@ -1122,7 +1123,7 @@ static bool check_sync(struct beacon_s *bp)
 
 			// Checking for equality here to cover the case of the system clock
 			// being mucked with.
-			if (!bp->last_sync_mod_time || (modTime != bp->last_sync_mod_time))
+			if (modTime != bp->last_sync_mod_time)
 			{
 				bp->last_sync_mod_time = modTime;
 
@@ -1136,8 +1137,6 @@ static bool check_sync(struct beacon_s *bp)
 
 					size_t sz = st.st_size + 1;
 					bp->sync_info = (char *)calloc(1, sz);
-
-					FILE *f = fopen(bp->sync_path, "r");
 
 					if (f)
 					{
@@ -1155,6 +1154,8 @@ static bool check_sync(struct beacon_s *bp)
 			}
 			else
 				ret = false;
+
+			fclose(f);
 		}
 		else
 		{
